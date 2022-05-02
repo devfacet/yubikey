@@ -67,7 +67,7 @@ test-tools:
 	fi
 	$(eval STATICCHECK_PATH=$(shell which staticcheck))
 	@if [ -z "$(STATICCHECK_PATH)" ]; then \
-		GO111MODULE=off go get honnef.co/go/tools/cmd/staticcheck; \
+		go install honnef.co/go/tools/cmd/staticcheck@v0.3.0; \
 	fi
 
 ## fmt             Run formating

@@ -19,7 +19,7 @@ on:
         - fatal
         - info
         - panic
-        - warning 
+        - warning
 
 jobs:
 

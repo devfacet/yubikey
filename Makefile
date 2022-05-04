@@ -13,25 +13,25 @@ help: Makefile
 
 ## test            Run gofmt, golint, staticcheck, go vet and go test.
 test:
-	$(eval FMT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs gofmt -l | wc -l | tr -d ' '))
+	$(eval FMT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs gofmt -l | wc -l | tr -d ' '))
 	@if [ "$(FMT)" != "0" ]; then \
 		echo "some files are not formatted, run 'make fmt'"; \
 		exit 1; \
 	fi
 
-	$(eval LINT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs golint | wc -l | tr -d ' '))
+	$(eval LINT=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs golint | wc -l | tr -d ' '))
 	@if [ "$(LINT)" != "0" ]; then \
 		echo "some files have linting errors, run 'make lint'"; \
 		exit 1; \
 	fi
 
-	$(eval STATICCHECK=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs staticcheck | wc -l | tr -d ' '))
+	$(eval STATICCHECK=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs staticcheck | wc -l | tr -d ' '))
 	@if [ "$(STATICCHECK)" != "0" ]; then \
 		echo "some files have staticcheck errors, run 'make staticcheck'"; \
 		exit 1; \
 	fi
 
-	$(eval GOVET=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | uniq | xargs go vet 2>&1 | wc -l | tr -d ' '))
+	$(eval GOVET=$(shell find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | sort | uniq | xargs go vet 2>&1 | wc -l | tr -d ' '))
 	@if [ "$(GOVET)" != "0" ]; then \
 		echo "some files have vetting errors, run 'make vet'"; \
 		exit 1; \
@@ -41,11 +41,11 @@ test:
 
 ## test-go         Run go test
 test-go:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs go test -v -race
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs go test -v -race
 
 ## test-benchmarks Run go benchmarks
 test-benchmarks:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs go test -benchmem -bench
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs go test -benchmem -bench
 
 ## test-ui         Launch test UI
 test-ui:
@@ -61,30 +61,32 @@ test-clean:
 
 ## test-tools      Install test tools
 test-tools:
+	@# golint is deprecated and frozen.
 	$(eval GOLINT_PATH=$(shell which golint))
 	@if [ -z "$(GOLINT_PATH)" ]; then \
 		GO111MODULE=off go get golang.org/x/lint/golint; \
 	fi
+
 	$(eval STATICCHECK_PATH=$(shell which staticcheck))
 	@if [ -z "$(STATICCHECK_PATH)" ]; then \
-		go install honnef.co/go/tools/cmd/staticcheck@v0.3.0; \
+		go install honnef.co/go/tools/cmd/staticcheck@v0.3.1; \
 	fi
 
 ## fmt             Run formating
 fmt:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs gofmt -l
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs gofmt -l
 
 ## lint            Run linting
 lint:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs golint
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs golint
 
 ## staticcheck     Run staticcheck
 staticcheck:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | uniq | xargs staticcheck
+	@find . -type f -name '*.go' | grep -v -E '^./vendor|^./third_party' | xargs -L1 dirname | sort | uniq | xargs staticcheck
 
 ## vet             Run vetting
 vet:
-	@find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | uniq | xargs go vet 2>&1
+	@find . -type f -name '*.go' | grep -v -E '^./vendor' | xargs -L1 dirname | sort | uniq | xargs go vet 2>&1
 
 ## release         Release a version
 release:

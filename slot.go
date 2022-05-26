@@ -16,6 +16,10 @@ import (
 var (
 	// ErrInvalidPIN represents an invalid PIN error.
 	ErrInvalidPIN = errors.New("invalid PIN")
+	// ErrMissingPIN represents a missing PIN error.
+	ErrMissingPIN = errors.New("missing PIN")
+	// ErrAuthError represents an authentication error.
+	ErrAuthError = errors.New("authentication error")
 	// ErrAuthBlocked represents an authentication block error.
 	ErrAuthBlocked = errors.New("authentication method blocked")
 
@@ -155,14 +159,20 @@ func (slot *Slot) SharedKey(peerPublicKey []byte) ([]byte, error) {
 	// PIN and Touch policies are enforced in this call
 	sharedKey, err := privateKeyECDSA.SharedKey(&peerPublicKeyECDSA)
 	if err != nil {
-		if strings.Contains(err.Error(), "63c2") {
+		if strings.Contains(err.Error(), "63c") {
 			// verify pin: smart card error 63c2: verification failed (2 retries remaining)
+			// verify pin: smart card error 63c1: verification failed (1 retry remaining)
 			return nil, ErrInvalidPIN
+		} else if strings.Contains(err.Error(), "6982") {
+			// auth challenge: smart card error 6982: security status not satisfied
+			return nil, ErrAuthError
 		} else if strings.Contains(err.Error(), "6983") {
 			// verify pin: smart card error 6983: authentication method blocked
 			return nil, ErrAuthBlocked
+		} else if strings.Contains(err.Error(), "pin required but wasn't provided") {
+			return nil, ErrMissingPIN
 		}
-		return nil, fmt.Errorf("couldn't get the shared key: %s", err)
+		return nil, err
 	}
 
 	return sharedKey, nil
@@ -207,6 +217,10 @@ func (slot *Slot) GenerateKey(opts GenerateKeyOpts) error {
 		},
 	)
 	if err != nil {
+		if strings.Contains(err.Error(), "6982") {
+			// auth challenge: smart card error 6982: security status not satisfied
+			return ErrAuthError
+		}
 		return err
 	}
 

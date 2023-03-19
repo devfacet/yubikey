@@ -178,7 +178,7 @@ func (slot *Slot) SharedKey(peerPublicKey []byte) ([]byte, error) {
 	return sharedKey, nil
 }
 
-// GenerateKeyOpts represents the options which can be used for generting a key.
+// GenerateKeyOpts represents the options which can be used for generating a key.
 type GenerateKeyOpts struct {
 	Overwrite   bool
 	Algorithm   Algorithm

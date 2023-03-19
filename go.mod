@@ -1,5 +1,5 @@
 module github.com/devfacet/yubikey
 
-go 1.17
+go 1.19
 
-require github.com/go-piv/piv-go v1.10.0
+require github.com/go-piv/piv-go v1.11.0

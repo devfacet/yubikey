@@ -7,21 +7,32 @@ package yubikey
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"sync"
 
 	"github.com/go-piv/piv-go/piv"
 )
 
 var (
+	// Mutex to support concurrent requests and prevent "connections outstanding" errors.
+	openMu = sync.Mutex{}
+
 	// DefaultPIN holds the default card PIN.
 	DefaultPIN = piv.DefaultPIN
 	// DefaultPUK holds the default card PUK.
 	DefaultPUK = piv.DefaultPUK
 	// DefaultManagementKey holds the default card management key.
 	DefaultManagementKey = piv.DefaultManagementKey
+
+	// ErrOutstandingConnections returns an outstanding connections error.
+	ErrOutstandingConnections = errors.New("outstanding connections")
 )
 
 // Cards returns the connected YubiKey smart cards.
 func Cards() ([]*Card, error) {
+	openMu.Lock()
+	defer openMu.Unlock()
+
 	// Get the card list
 	pivCards, err := piv.Cards()
 	if err != nil {
@@ -46,11 +57,15 @@ func Cards() ([]*Card, error) {
 		// Connect to the smart card and set the card info
 		yk, err := piv.Open(card.name)
 		if err != nil {
-			return nil, fmt.Errorf("couldn't connect to the YubiKey smart card (%s): %s", card.serial, err)
+			if strings.Contains(err.Error(), "connections outstanding") {
+				return nil, ErrOutstandingConnections
+			}
+			return nil, fmt.Errorf("couldn't connect to the YubiKey smart card (%s): %s", card.name, err)
 		}
 		s, err := yk.Serial()
 		if err != nil {
-			return nil, fmt.Errorf("couldn't determined the YubiKey serial (%s): %s", card.serial, err)
+			yk.Close()
+			return nil, fmt.Errorf("couldn't determined the YubiKey serial (%s): %s", card.name, err)
 		}
 		card.serial = fmt.Sprintf("%d", s)
 		card.version = yk.Version()
@@ -58,6 +73,7 @@ func Cards() ([]*Card, error) {
 		// Check the version
 		// Ref: https://developers.yubico.com/PIV/Introduction/PIV_attestation.html
 		if card.version.Major < 4 || (card.version.Major == 4 && card.version.Minor < 3) {
+			yk.Close()
 			return nil, fmt.Errorf("version of the YubiKey (%s) is not supported: %s", card.serial, card.Version())
 		}
 

@@ -121,6 +121,8 @@ func (slot *Slot) SharedKey(peerPublicKey []byte) ([]byte, error) {
 	}
 
 	// Connect to the smartcard
+	openMu.Lock()
+	defer openMu.Unlock()
 	yk, err := piv.Open(slot.card.name)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't connect to the YubiKey smart card (%s): %s", slot.card.name, err)
@@ -196,6 +198,8 @@ func (slot *Slot) GenerateKey(opts GenerateKeyOpts) error {
 	}
 
 	// Connect to the smart card
+	openMu.Lock()
+	defer openMu.Unlock()
 	yk, err := piv.Open(slot.card.name)
 	if err != nil {
 		return fmt.Errorf("couldn't connect to the YubiKey smart card (%s): %s", slot.card.serial, err)

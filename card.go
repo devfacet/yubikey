@@ -71,6 +71,9 @@ func (card *Card) Slots() ([]*Slot, error) {
 
 // SlotsByKey returns the card slots by the given slot keys.
 func (card *Card) SlotsByKey(slotKeys []string) ([]*Slot, error) {
+	openMu.Lock()
+	defer openMu.Unlock()
+
 	// Connect to the smart card
 	yk, err := piv.Open(card.name)
 	if err != nil {
@@ -123,7 +126,7 @@ func (card *Card) SlotsByKey(slotKeys []string) ([]*Slot, error) {
 		// Determine the slot PIN and touch policies
 		aCert, err := yk.AttestationCertificate()
 		if err != nil {
-			return nil, fmt.Errorf("couldn't access to the key atestation certificate (%s): %s", slotKey, err)
+			return nil, fmt.Errorf("couldn't access to the key attestation certificate (%s): %s", slotKey, err)
 		}
 		sAttestation, err := piv.Verify(aCert, cert)
 		if err != nil {

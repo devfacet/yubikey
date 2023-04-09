@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.0
+
+- Add Card.VerifyPIN and Card.Unblock methods
+- Add mutex for supporting concurrent card requests
+
 ## v0.3.0
 
 - Upgrade piv-go package

@@ -182,3 +182,31 @@ func (card *Card) SlotsByKey(slotKeys []string) ([]*Slot, error) {
 
 	return slots, nil
 }
+
+// VerifyPIN attempts to authenticate against the card with the provided PIN.
+func (card *Card) VerifyPIN(pin string) error {
+	// Connect to the smart card
+	openMu.Lock()
+	defer openMu.Unlock()
+	yk, err := piv.Open(card.name)
+	if err != nil {
+		return fmt.Errorf("couldn't connect to the YubiKey smart card (%s): %s", card.name, err)
+	}
+	defer yk.Close()
+
+	return yk.VerifyPIN(pin)
+}
+
+// Unblock unblocks the PIN, setting it to a new value.
+func (card *Card) Unblock(puk, newPIN string) error {
+	// Connect to the smart card
+	openMu.Lock()
+	defer openMu.Unlock()
+	yk, err := piv.Open(card.name)
+	if err != nil {
+		return fmt.Errorf("couldn't connect to the YubiKey smart card (%s): %s", card.name, err)
+	}
+	defer yk.Close()
+
+	return yk.Unblock(puk, newPIN)
+}

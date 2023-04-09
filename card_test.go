@@ -30,5 +30,11 @@ func TestCard(t *testing.T) {
 		} else if l := len(slots); l == 0 {
 			t.Error("no slot found")
 		}
+		if err := card.VerifyPIN(yubikey.DefaultPIN); err != nil {
+			t.Errorf("got %v, want nil", err)
+		}
+		if err := card.Unblock(yubikey.DefaultPUK, yubikey.DefaultPIN); err != nil {
+			t.Errorf("got %v, want nil", err)
+		}
 	}
 }
